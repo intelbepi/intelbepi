@@ -58,7 +58,7 @@ def display_results(placas):
 
 # Página principal da aplicação
 def main():
-    st.set_page_config(page_title="Analisador de Placas Veiculares", layout="wide")
+    st.set_page_config(page_title="Analisador de Veículos em Comboio", layout="wide")
     
     st.title("Analisador de Placas Veiculares")
     
