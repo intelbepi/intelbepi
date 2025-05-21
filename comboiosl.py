@@ -1,45 +1,6 @@
 import streamlit as st
-from streamlit_authenticator import Authenticate
-import yaml
-from yaml.loader import SafeLoader
 import re
 from collections import defaultdict
-
-# Configuração inicial do autenticador
-def setup_authenticator():
-    try:
-        with open('config.yaml') as file:
-            config = yaml.load(file, Loader=SafeLoader)
-    except FileNotFoundError:
-        # Cria um arquivo de configuração padrão se não existir
-        config = {
-            'credentials': {
-                'usernames': {
-                    'admin': {
-                        'email': 'admin@example.com',
-                        'name': 'Administrador',
-                        'password': 'admin123'  # Será hashado automaticamente
-                    }
-                }
-            },
-            'cookie': {
-                'name': 'placas_cookie',
-                'key': 'uma_chave_secreta_aleatoria_muito_longa',  # Substitua por uma chave real
-                'expiry_days': 30
-            },
-            'preauthorized': {
-                'emails': []
-            }
-        }
-        with open('config.yaml', 'w') as file:
-            yaml.dump(config, file)
-    
-    return Authenticate(
-        config['credentials'],
-        config['cookie']['name'],
-        config['cookie']['key'],
-        config['cookie']['expiry_days']
-    ), config  # Retorna também o config para usar no register_user
 
 # Processamento do texto
 def process_text(text):
@@ -96,12 +57,8 @@ def display_results(placas):
     return resultado
 
 # Página principal da aplicação
-def main_page(authenticator):
+def main():
     st.set_page_config(page_title="Analisador de Placas Veiculares", layout="wide")
-    
-    with st.sidebar:
-        st.write(f"Bem-vindo, *{st.session_state['name']}*")
-        authenticator.logout('Sair', 'sidebar')
     
     st.title("Analisador de Placas Veiculares")
     
@@ -123,70 +80,5 @@ def main_page(authenticator):
         else:
             st.warning("Por favor, insira algum texto para processar.")
 
-# Página de gerenciamento de usuários (apenas para admin)
-def user_management(authenticator, config):
-    st.title("Gerenciamento de Usuários")
-    
-    try:
-        if authenticator.register_user('Registrar novo usuário', pre_authorized_emails=config['preauthorized']['emails']):
-            st.success('Usuário registrado com sucesso')
-            with open('config.yaml', 'w') as file:
-                yaml.dump(authenticator.config, file, default_flow_style=False)
-    except Exception as e:
-        st.error(e)
-    
-    try:
-        if authenticator.reset_password(st.session_state['username'], 'Redefinir senha'):
-            st.success('Senha modificada com sucesso')
-            with open('config.yaml', 'w') as file:
-                yaml.dump(authenticator.config, file, default_flow_style=False)
-    except Exception as e:
-        st.error(e)
-    
-    try:
-        if authenticator.update_user_details(st.session_state['username'], 'Atualizar detalhes do usuário'):
-            st.success('Detalhes atualizados com sucesso')
-            with open('config.yaml', 'w') as file:
-                yaml.dump(authenticator.config, file, default_flow_style=False)
-    except Exception as e:
-        st.error(e)
-
-# Página de administração
-def admin_page(authenticator, config):
-    st.set_page_config(page_title="Administração", layout="wide")
-    
-    with st.sidebar:
-        st.write(f"Bem-vindo, *{st.session_state['name']}* (Admin)")
-        authenticator.logout('Sair', 'sidebar')
-    
-    tab1, tab2 = st.tabs(["Analisador de Placas", "Gerenciamento de Usuários"])
-    
-    with tab1:
-        main_page(authenticator)
-    
-    with tab2:
-        user_management(authenticator, config)
-
-# Inicialização do aplicativo
-def run_app():
-    authenticator, config = setup_authenticator()
-    
-    name, authentication_status, username = authenticator.login(form_name='Login', location='main')
-    
-    if authentication_status:
-        st.session_state['authentication_status'] = authentication_status
-        st.session_state['name'] = name
-        st.session_state['username'] = username
-        
-        if username == 'admin':
-            admin_page(authenticator, config)
-        else:
-            main_page(authenticator)
-    
-    elif authentication_status is False:
-        st.error('Usuário ou senha incorretos')
-    elif authentication_status is None:
-        st.warning('Por favor, insira seu usuário e senha')
-
 if __name__ == '__main__':
-    run_app()
+    main()
