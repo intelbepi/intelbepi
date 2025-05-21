@@ -60,7 +60,7 @@ def display_results(placas):
 def main():
     st.set_page_config(page_title="Analisador de Veículos em Comboio", layout="wide")
     
-    st.title("Analisador de Placas Veiculares")
+    st.title("Analisador de Veículos em Comboio")
     
     st.subheader("Cole os registros abaixo e clique em 'Processar':")
     text_input = st.text_area("", height=300, placeholder="Cole aqui os dados das placas e horários...", key="text_input")
