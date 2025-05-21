@@ -38,9 +38,8 @@ def setup_authenticator():
         config['credentials'],
         config['cookie']['name'],
         config['cookie']['key'],
-        config['cookie']['expiry_days'],
-        config['preauthorized']
-    )
+        config['cookie']['expiry_days']
+    ), config  # Retorna também o config para usar no register_user
 
 # Processamento do texto
 def process_text(text):
@@ -62,11 +61,8 @@ def process_text(text):
     padrao_data_hora = re.compile(r'(\d{2}/\d{2}/\d{4})\s+(\d{2}:\d{2})')
     
     for linha in linhas:
-        # Verifica se é uma placa
         if padrao_placa.fullmatch(linha.strip()):
             placa_atual = linha.strip().upper()
-        
-        # Verifica se é uma data/hora e se já temos uma placa identificada
         elif placa_atual and (match := padrao_data_hora.search(linha)):
             data = match.group(1)
             hora = match.group(2)
@@ -76,11 +72,9 @@ def process_text(text):
 
 # Exibição dos resultados
 def display_results(placas):
-    # Prepara o resultado
     resultado = "## RELATÓRIO DE PLACAS:\n\n"
     resultado += f"**Total de placas únicas encontradas:** {len(placas)}\n\n"
     
-    # Separa em placas únicas e repetidas
     placas_unicas = {p: d for p, d in placas.items() if len(d) == 1}
     placas_repetidas = {p: d for p, d in placas.items() if len(d) > 1}
     
@@ -105,26 +99,21 @@ def display_results(placas):
 def main_page(authenticator):
     st.set_page_config(page_title="Analisador de Placas Veiculares", layout="wide")
     
-    # Barra lateral com informações do usuário e logout
     with st.sidebar:
         st.write(f"Bem-vindo, *{st.session_state['name']}*")
         authenticator.logout('Sair', 'sidebar')
     
     st.title("Analisador de Placas Veiculares")
     
-    # Área de texto para entrada
     st.subheader("Cole os registros abaixo e clique em 'Processar':")
     text_input = st.text_area("", height=300, placeholder="Cole aqui os dados das placas e horários...", key="text_input")
 
-    # Botão para processar
     if st.button("Processar", type="primary"):
         if text_input.strip():
             placas = process_text(text_input)
             if placas is not None:
                 results = display_results(placas)
                 st.markdown(results)
-                
-                # Opção para download do relatório
                 st.download_button(
                     label="Baixar Relatório",
                     data=results,
@@ -135,13 +124,12 @@ def main_page(authenticator):
             st.warning("Por favor, insira algum texto para processar.")
 
 # Página de gerenciamento de usuários (apenas para admin)
-def user_management(authenticator):
+def user_management(authenticator, config):
     st.title("Gerenciamento de Usuários")
     
     try:
-        if authenticator.register_user('Registrar novo usuário', preauthorization=False):
+        if authenticator.register_user('Registrar novo usuário', pre_authorized_emails=config['preauthorized']['emails']):
             st.success('Usuário registrado com sucesso')
-            # Atualiza o arquivo de configuração
             with open('config.yaml', 'w') as file:
                 yaml.dump(authenticator.config, file, default_flow_style=False)
     except Exception as e:
@@ -164,7 +152,7 @@ def user_management(authenticator):
         st.error(e)
 
 # Página de administração
-def admin_page(authenticator):
+def admin_page(authenticator, config):
     st.set_page_config(page_title="Administração", layout="wide")
     
     with st.sidebar:
@@ -177,13 +165,12 @@ def admin_page(authenticator):
         main_page(authenticator)
     
     with tab2:
-        user_management(authenticator)
+        user_management(authenticator, config)
 
 # Inicialização do aplicativo
 def run_app():
-    authenticator = setup_authenticator()
+    authenticator, config = setup_authenticator()
     
-    # Tenta autenticar o usuário
     name, authentication_status, username = authenticator.login('Login', 'main')
     
     if authentication_status:
@@ -191,9 +178,8 @@ def run_app():
         st.session_state['name'] = name
         st.session_state['username'] = username
         
-        # Verifica se é admin
         if username == 'admin':
-            admin_page(authenticator)
+            admin_page(authenticator, config)
         else:
             main_page(authenticator)
     
