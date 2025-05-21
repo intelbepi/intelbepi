@@ -1,2 +1,3 @@
+streamlit==1.29.0
 streamlit-authenticator==0.2.3
-pyyaml==6.0
+pyyaml==5.4.1  # Versão mais estável e amplamente compatível
