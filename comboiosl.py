@@ -99,7 +99,7 @@ def analise_de_passagens():
     st.title("Análise de Passagens")
 
     texto = st.text_area("Cole os dados (linha 1: placa, linha 2: título, restante: registros):", height=400)
-    texto =+ '/n0/0'
+    texto += '/n0/0'
     if st.button("Processar Registros"):
         if texto:
             processar_analise(texto)
