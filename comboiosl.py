@@ -22,9 +22,9 @@ def main():
     st.sidebar.title("Navegação")
     pagina = st.sidebar.radio("Escolha uma opção:", ["🚗🚗 - Veículos em Comboio", "🕵️ - Análise de Passagens"])
 
-    if pagina == "Veículos em Comboio":
+    if pagina == "🚗🚗 - Veículos em Comboio":
         veiculos_em_comboio()
-    elif pagina == "Análise de Passagens":
+    elif pagina == "🕵️ - Análise de Passagens":
         analise_de_passagens()
 
 
