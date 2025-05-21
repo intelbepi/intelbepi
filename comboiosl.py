@@ -20,7 +20,7 @@ dias_semana = {
 def main():
     st.set_page_config(layout="wide")
     st.sidebar.title("Navegação")
-    pagina = st.sidebar.radio("Escolha uma opção:", ["Veículos em Comboio", "Análise de Passagens"])
+    pagina = st.sidebar.radio("Escolha uma opção:", ["🚗🚗 - Veículos em Comboio", "🕵️ - Análise de Passagens"])
 
     if pagina == "Veículos em Comboio":
         veiculos_em_comboio()
