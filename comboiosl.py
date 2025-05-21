@@ -99,7 +99,6 @@ def analise_de_passagens():
     st.title("Análise de Passagens")
 
     texto = st.text_area("Cole os dados (linha 1: placa, linha 2: título, restante: registros):", height=400)
-    texto += '/n0/0'
     if st.button("Processar Registros"):
         if texto:
             processar_analise(texto)
@@ -108,6 +107,9 @@ def analise_de_passagens():
 
 
 def processar_analise(texto):
+        # Adiciona "0/0" no final do texto se ainda não estiver presente
+    if not texto.strip().endswith("0/0"):
+        texto = texto + "\n0/0"
     linhas = [linha.strip() for linha in texto.splitlines() if linha.strip()]
     if len(linhas) < 2:
         st.error("Texto deve conter pelo menos duas linhas: placa e título.")
