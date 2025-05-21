@@ -73,7 +73,7 @@ def main():
         )
 
     # Processamento dos textos combinados
-    if st.button("✅ Processar Todos os Blocos"):
+    if st.button("Processar"):
         full_text = "\n".join(st.session_state.text_blocks)
         if full_text.strip():
             placas = process_text(full_text)
