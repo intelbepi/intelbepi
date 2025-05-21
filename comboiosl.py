@@ -214,6 +214,9 @@ def gerar_pdf_streamlit(df, placa, titulo, analise, imagens):
     c.showPage()
     c.setFont("Helvetica", 10)
     y = 750
+
+    analise += "\nBrasil"
+    
     for linha in analise.split("\n"):
         c.drawString(50, y, linha)
         y -= 15
