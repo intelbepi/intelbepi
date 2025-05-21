@@ -171,7 +171,7 @@ def admin_page(authenticator, config):
 def run_app():
     authenticator, config = setup_authenticator()
     
-    name, authentication_status, username = authenticator.login('Login', 'main')
+    name, authentication_status, username = authenticator.login('Login', location='main')
     
     if authentication_status:
         st.session_state['authentication_status'] = authentication_status
