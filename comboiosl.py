@@ -66,7 +66,7 @@ def main():
     # Renderiza os campos de texto
     for i in range(len(st.session_state.text_blocks)):
         st.session_state.text_blocks[i] = st.text_area(
-            f"Bloco {i + 1}",
+            f"Passagem {i + 1}",
             value=st.session_state.text_blocks[i],
             height=200,
             key=f"text_block_{i}"
