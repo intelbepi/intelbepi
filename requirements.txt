@@ -2,3 +2,8 @@ streamlit
 PyYAML
 streamlit-authenticator
 matplotlib
+pandas
+matplotlib
+seaborn
+openpyxl
+reportlab
