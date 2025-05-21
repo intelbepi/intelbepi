@@ -2,7 +2,7 @@ import streamlit as st
 import re
 from collections import defaultdict
 
-# Processamento do texto
+# Função de processamento
 def process_text(text):
     linhas = [linha.strip() for linha in text.split("\n") if linha.strip()]
     if not linhas:
@@ -25,7 +25,7 @@ def process_text(text):
 
     return placas
 
-# Exibição dos resultados
+# Função de exibição
 def display_results(placas):
     resultado = "## RELATÓRIO DE PLACAS:\n\n"
     resultado += f"**Total de placas únicas encontradas:** {len(placas)}\n\n"
@@ -50,20 +50,16 @@ def display_results(placas):
 
     return resultado
 
-# Página principal
-def main():
-    st.set_page_config(page_title="Analisador de Veículos em Comboio", layout="wide")
+# Página: Veículos em Comboio
+def veiculos_comboio():
     st.title("Analisador de Veículos em Comboio")
 
-    # Inicializa a lista de textos na sessão
     if 'text_blocks' not in st.session_state:
         st.session_state.text_blocks = [""]
 
-    # Botão para adicionar novo bloco
     if st.button("➕ Adicionar Passagem"):
         st.session_state.text_blocks.append("")
 
-    # Renderiza os campos de texto
     for i in range(len(st.session_state.text_blocks)):
         st.session_state.text_blocks[i] = st.text_area(
             f"Passagem {i + 1}",
@@ -72,7 +68,6 @@ def main():
             key=f"text_block_{i}"
         )
 
-    # Processamento dos textos combinados
     if st.button("Processar"):
         full_text = "\n".join(st.session_state.text_blocks)
         if full_text.strip():
@@ -88,6 +83,22 @@ def main():
                 )
         else:
             st.warning("Por favor, insira texto nos blocos para processar.")
+
+# Função principal com menu lateral
+def main():
+    st.set_page_config(page_title="InteliBepi", layout="wide")
+
+    st.sidebar.title("📋 Menu")
+    opcao = st.sidebar.radio("Escolha uma opção:", ["🏠 Início", "🚗 Veículos em Comboio", "ℹ️ Sobre"])
+
+    if opcao == "🏠 Início":
+        st.title("Bem-vindo ao InteliBepi")
+        st.write("Escolha uma opção no menu à esquerda.")
+    elif opcao == "🚗 Veículos em Comboio":
+        veiculos_comboio()
+    elif opcao == "ℹ️ Sobre":
+        st.title("Sobre")
+        st.write("Este sistema foi desenvolvido para análise de veículos em comboio.")
 
 if __name__ == '__main__':
     main()
