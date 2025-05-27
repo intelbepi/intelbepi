@@ -207,7 +207,7 @@ Classificação em 3 categorias com feedback visual
 
 Visualização dos embeddings:
 
-Gráficos 2D usando PCA e t-SNE
+Gráficos em segunda dimensão usando PCA e t-SNE
 
 Gráfico 3D usando PCA (quando aplicável)
 
