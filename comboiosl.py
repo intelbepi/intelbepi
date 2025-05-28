@@ -55,10 +55,10 @@ def main():
 def comparacao_facial():
     st.title("👥 Comparação Facial")
     st.write("""
-    Faça upload de duas imagens para comparar os rostos detectados. 
-    A aplicação mostrará:
+    🔍 Faça upload de duas imagens para comparar os rostos detectados. 
+    O sistema mostrará:
     - Imagens com bounding boxes nos rostos detectados
-    - Similaridade entre os rostos
+    - Similaridade entre os rostos mais próximos
     - Visualização dos embeddings em 2D e 3D
     """)
 
@@ -75,6 +75,9 @@ def comparacao_facial():
     if img1 and img2:
         processar_comparacao_facial(img1, img2)
 
+# -------------------------------------------
+# Processamento
+# -------------------------------------------
 def processar_comparacao_facial(img1, img2):
     def extract_face_details(image_file):
         img_bytes = image_file.read()
@@ -85,12 +88,11 @@ def processar_comparacao_facial(img1, img2):
             st.error("Erro ao ler a imagem.")
             return None
         
-        faces = app.get(img)
+        faces = app.get(img)  # InsightFace detecta e extrai embeddings dos rostos
         if not faces:
             st.error("Nenhum rosto detectado na imagem.")
             return None
         
-        # Desenhar bounding boxes
         img_with_boxes = img.copy()
         for face in faces:
             bbox = face.bbox.astype(int)
@@ -103,65 +105,13 @@ def processar_comparacao_facial(img1, img2):
         }
 
     def calculate_similarity(embedding1, embedding2):
+        # Calcula similaridade usando distância de cosseno
         cos_distance = cosine(embedding1, embedding2)
-        similarity = (1 - cos_distance) * 100
+        similarity = (1 - cos_distance) * 100  # Converte para escala percentual
         similarity = max(min(similarity, 100), 0)
-        return similarity
+        return similarity, cos_distance
 
 
-    def plot_embeddings(embeddings, labels):
-        embeddings = np.array(embeddings)
-        
-        # Verificar se há mais de um ponto único
-        if np.allclose(embeddings[0], embeddings[1]):
-            st.warning("❗Os embeddings são idênticos. PCA e t-SNE não podem ser aplicados.")
-            return
-        
-        # PCA 2D
-        pca_2d = PCA(n_components=2)
-        embeddings_pca_2d = pca_2d.fit_transform(embeddings)
-        
-        # t-SNE 2D
-        tsne_2d = TSNE(n_components=2, perplexity=min(5, len(embeddings)-1))
-        embeddings_tsne_2d = tsne_2d.fit_transform(embeddings)
-        
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    
-        # Plot PCA
-        for i, (x, y) in enumerate(embeddings_pca_2d):
-            ax1.scatter(x, y, label=labels[i])
-            ax1.text(x, y, f"{i+1}", fontsize=12)
-        ax1.set_title('PCA 2D')
-        ax1.legend()
-    
-        # Plot t-SNE
-        for i, (x, y) in enumerate(embeddings_tsne_2d):
-            ax2.scatter(x, y, label=labels[i])
-            ax2.text(x, y, f"{i+1}", fontsize=12)
-        ax2.set_title('t-SNE 2D')
-        ax2.legend()
-    
-        st.pyplot(fig)
-    
-        # PCA 3D se for possível
-        if len(embeddings) >= 3 and len(np.unique(embeddings, axis=0)) >= 3:
-            fig_3d = plt.figure(figsize=(8, 6))
-            ax_3d = fig_3d.add_subplot(111, projection='3d')
-            
-            pca_3d = PCA(n_components=3)
-            embeddings_pca_3d = pca_3d.fit_transform(embeddings)
-            
-            for i, (x, y, z) in enumerate(embeddings_pca_3d):
-                ax_3d.scatter(x, y, z, label=labels[i])
-                ax_3d.text(x, y, z, f"{i+1}", fontsize=12)
-            
-            ax_3d.set_title('PCA 3D')
-            ax_3d.legend()
-            st.pyplot(fig_3d)
-
-
-
-    
     # Processar imagens
     result1 = extract_face_details(img1)
     result2 = extract_face_details(img2)
@@ -170,7 +120,7 @@ def processar_comparacao_facial(img1, img2):
         return
     
     # Mostrar imagens com bounding boxes
-    st.subheader("Rostos Detectados")
+    st.subheader("🖼️ Rostos Detectados")
     col1, col2 = st.columns(2)
     with col1:
         st.image(cv2.cvtColor(result1['image_with_boxes'], cv2.COLOR_BGR2RGB), 
@@ -179,29 +129,51 @@ def processar_comparacao_facial(img1, img2):
         st.image(cv2.cvtColor(result2['image_with_boxes'], cv2.COLOR_BGR2RGB), 
                 caption="Imagem 2 com rostos detectados", use_container_width=True)
     
-    # Comparar os primeiros rostos de cada imagem
-    face1 = result1['faces'][0]
-    face2 = result2['faces'][0]
+    # Comparar todos os rostos entre as duas imagens
+    best_similarity = 0
+    best_pair = (None, None)
+    best_distance = 1  # maior possível
     
-    similarity = calculate_similarity(face1.embedding, face2.embedding)
+    for face1 in result1['faces']:
+        for face2 in result2['faces']:
+            sim, dist = calculate_similarity(face1.embedding, face2.embedding)
+            if sim > best_similarity:
+                best_similarity = sim
+                best_distance = dist
+                best_pair = (face1, face2)
+
+    face1, face2 = best_pair
     
     # Resultados da comparação
     st.subheader("📊 Resultados da Comparação")
-    st.metric("Similaridade entre os rostos", f"{similarity:.2f}%")
+    st.metric("Maior Similaridade Encontrada", f"{best_similarity:.2f}%")
     
     # Barra de similaridade
-    st.progress(int(similarity))
+    st.progress(int(best_similarity))
     
-    # Interpretação
-    if similarity < 50.0:
-        st.warning("👤 As imagens NÃO são da mesma pessoa (similaridade abaixo de 60.0%)")
-    elif 50.0 <= similarity < 75.0:
-        st.info("🤔 As imagens são PROVAVELMENTE da mesma pessoa (similaridade entre 50.0% e 75.0%)")
+    # Interpretação baseada em testes práticos e literatura
+    if best_similarity >= 70:
+        st.success("✅ Alta chance de ser a MESMA pessoa (similaridade ≥ 70%)")
+    elif 60 <= best_similarity < 70:
+        st.info("🤔 Provavelmente a mesma pessoa (similaridade entre 60% e 70%)")
+    elif 50 <= best_similarity < 60:
+        st.warning("⚠️ Possivelmente a mesma pessoa, mas com incerteza (50-60%)")
     else:
-        st.success("✅ As imagens SÃO da mesma pessoa (similaridade acima de 75.0%)")
+        st.error("❌ Provavelmente NÃO são a mesma pessoa (similaridade < 50%)")
     
-    # Métricas adicionais
-    st.write(f"**Distância de cosseno:** {cosine(face1.embedding, face2.embedding):.4f}")
+    # Explicação do limiar
+    with st.expander("ℹ️ Por que o limiar varia tanto?"):
+        st.write("""
+        ✅ A similaridade entre rostos não é fixa e pode variar muito devido a:
+        - Diferenças de **iluminação**, **ângulo do rosto**, **expressões faciais**, **resolução da imagem** e **obstruções** como óculos ou bonés.
+        - O modelo faz um redimensionamento interno dos rostos para **112x112 pixels**, mas rostos muito distantes ou fotos de baixa qualidade impactam os resultados.
+        - Na prática, é comum que fotos da mesma pessoa em condições diferentes tenham similaridade na faixa de **55% a 70%**.
+        
+        👉 Este app utiliza um limiar mais flexível, pensado para uso investigativo, não restrito como sistemas biométricos de segurança.
+        """)
+    
+    # Distância de cosseno
+    st.write(f"**Distância de Cosseno:** {best_distance:.4f}")
     
     # Visualização dos embeddings
     st.subheader("📈 Visualização dos Embeddings")
@@ -212,20 +184,11 @@ def processar_comparacao_facial(img1, img2):
     plot_embeddings(embeddings, labels)
     
     # Detalhes técnicos
-    with st.expander("🔍 Detalhes técnicos"):
+    with st.expander("🔍 Detalhes Técnicos"):
         st.write("**Embedding da Imagem 1:**", face1.embedding)
         st.write("**Embedding da Imagem 2:**", face2.embedding)
         st.write("**Dimensão dos embeddings:**", len(face1.embedding))
-        
-        # Matriz de distância
-        dist_matrix = np.zeros((2, 2))
-        for i in range(2):
-            for j in range(2):
-                dist_matrix[i, j] = cosine(embeddings[i], embeddings[j])
-        
-        st.write("**Matriz de distância de cosseno:**")
-        df = pd.DataFrame(dist_matrix, index=labels, columns=labels)
-        st.dataframe(df)
+
 
 
 
