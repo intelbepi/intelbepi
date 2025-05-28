@@ -108,51 +108,55 @@ def processar_comparacao_facial(img1, img2):
         similarity = max(min(similarity, 100), 0)
         return similarity
 
-    def plot_embeddings(embeddings, labels):
-        embeddings = np.array(embeddings)
+   def plot_embeddings(embeddings, labels):
+    embeddings = np.array(embeddings)
+    
+    # Verificar se há mais de um ponto único
+    if np.allclose(embeddings[0], embeddings[1]):
+        st.warning("❗Os embeddings são idênticos. PCA e t-SNE não podem ser aplicados.")
+        return
+    
+    # PCA 2D
+    pca_2d = PCA(n_components=2)
+    embeddings_pca_2d = pca_2d.fit_transform(embeddings)
+    
+    # t-SNE 2D
+    tsne_2d = TSNE(n_components=2, perplexity=min(5, len(embeddings)-1))
+    embeddings_tsne_2d = tsne_2d.fit_transform(embeddings)
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Plot PCA
+    for i, (x, y) in enumerate(embeddings_pca_2d):
+        ax1.scatter(x, y, label=labels[i])
+        ax1.text(x, y, f"{i+1}", fontsize=12)
+    ax1.set_title('PCA 2D')
+    ax1.legend()
+
+    # Plot t-SNE
+    for i, (x, y) in enumerate(embeddings_tsne_2d):
+        ax2.scatter(x, y, label=labels[i])
+        ax2.text(x, y, f"{i+1}", fontsize=12)
+    ax2.set_title('t-SNE 2D')
+    ax2.legend()
+
+    st.pyplot(fig)
+
+    # PCA 3D se for possível
+    if len(embeddings) >= 3 and len(np.unique(embeddings, axis=0)) >= 3:
+        fig_3d = plt.figure(figsize=(8, 6))
+        ax_3d = fig_3d.add_subplot(111, projection='3d')
         
-        # PCA 2D
-        pca_2d = PCA(n_components=2)
-        embeddings_pca_2d = pca_2d.fit_transform(embeddings)
+        pca_3d = PCA(n_components=3)
+        embeddings_pca_3d = pca_3d.fit_transform(embeddings)
         
-        # t-SNE 2D
-        tsne_2d = TSNE(n_components=2, perplexity=min(5, len(embeddings)-1))
-        embeddings_tsne_2d = tsne_2d.fit_transform(embeddings)
+        for i, (x, y, z) in enumerate(embeddings_pca_3d):
+            ax_3d.scatter(x, y, z, label=labels[i])
+            ax_3d.text(x, y, z, f"{i+1}", fontsize=12)
         
-        # Criar figuras
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-        
-        # Plot PCA 2D
-        for i, (x, y) in enumerate(embeddings_pca_2d):
-            ax1.scatter(x, y, label=labels[i])
-            ax1.text(x, y, f"{i+1}", fontsize=12)
-        ax1.set_title('PCA 2D')
-        ax1.legend()
-        
-        # Plot t-SNE 2D
-        for i, (x, y) in enumerate(embeddings_tsne_2d):
-            ax2.scatter(x, y, label=labels[i])
-            ax2.text(x, y, f"{i+1}", fontsize=12)
-        ax2.set_title('t-SNE 2D')
-        ax2.legend()
-        
-        st.pyplot(fig)
-        
-        # PCA 3D se tivermos pelo menos 3 pontos
-        if len(embeddings) >= 3:
-            fig_3d = plt.figure(figsize=(8, 6))
-            ax_3d = fig_3d.add_subplot(111, projection='3d')
-            
-            pca_3d = PCA(n_components=3)
-            embeddings_pca_3d = pca_3d.fit_transform(embeddings)
-            
-            for i, (x, y, z) in enumerate(embeddings_pca_3d):
-                ax_3d.scatter(x, y, z, label=labels[i])
-                ax_3d.text(x, y, z, f"{i+1}", fontsize=12)
-            
-            ax_3d.set_title('PCA 3D')
-            ax_3d.legend()
-            st.pyplot(fig_3d)
+        ax_3d.set_title('PCA 3D')
+        ax_3d.legend()
+        st.pyplot(fig_3d)
 
     # Processar imagens
     result1 = extract_face_details(img1)
