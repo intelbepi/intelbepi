@@ -193,10 +193,10 @@ def processar_comparacao_facial(img1, img2):
     st.progress(int(similarity))
     
     # Interpretação
-    if similarity < 60.0:
+    if similarity < 50.0:
         st.warning("👤 As imagens NÃO são da mesma pessoa (similaridade abaixo de 60.0%)")
-    elif 60.0 <= similarity < 75.0:
-        st.info("🤔 As imagens são PROVAVELMENTE da mesma pessoa (similaridade entre 60.0% e 75.0%)")
+    elif 50.0 <= similarity < 75.0:
+        st.info("🤔 As imagens são PROVAVELMENTE da mesma pessoa (similaridade entre 50.0% e 75.0%)")
     else:
         st.success("✅ As imagens SÃO da mesma pessoa (similaridade acima de 75.0%)")
     
