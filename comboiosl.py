@@ -28,7 +28,7 @@ dias_semana = {
 # Inicializar o modelo InsightFace
 @st.cache_resource
 def load_face_model():
-    app = FaceAnalysis()
+    app = FaceAnalysis(name='buffalo_l')
     app.prepare(ctx_id=0, det_size=(640, 640))
     return app
 
